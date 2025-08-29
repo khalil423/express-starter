@@ -1,0 +1,124 @@
+const Newsletter = require("../models/newsletter");
+const jwt = require("jsonwebtoken");
+
+require("dotenv").config();
+
+const getNewsletter = async (req, res) => {
+  try {
+    const newsletters = await Newsletter.findAll();
+    res.status(200).json({ Newsletter: newsletters });
+  } catch (error) {
+    res.status(500).json({ msg: "error on getting newsletter" });
+  }
+};
+
+const getOneNewsletter = async (req, res) => {
+  const id = req.params.id;
+  console.log(req.Newsletter);
+  try {
+    const foundNewsletter = await User.findByPk(id);
+    if (foundNewsletter) {
+      res.status(200).json({ newsletter: foundNewsletter });
+    } else {
+      res.status(404).json({ msg: "The newsletter does not exist" });
+    }
+  } catch (error) {
+    res.status(500).json({ msg: "error on getting newsletter" });
+  }
+};
+
+const postNewsletter = async (req, res) => {
+  try {
+    const newNewsletter = req.body;
+
+    // Create public URL path to image (to be used on frontend)
+    const imageUrl = req.file ? `/assets/${req.file.filename}` : null;
+
+    // Add image info to the object that will be saved
+    if (req.file) {
+      newNewsletter.Image = imageUrl; // Public URL for frontend
+    }
+
+    const createdNewsletter = await Newsletter.create(newNewsletter);
+
+    res.status(200).json({
+      newsletter: createdNewsletter,
+      msg: "Newsletter created successfully",
+    });
+  } catch (error) {
+    console.error("Newsletter creation error:", error);
+    res.status(500).json({
+      msg: "Error on adding newsletter:",
+      error: error.message,
+    });
+  }
+};
+
+const putNewsletter = async (req, res) => {
+  const NewsletterId = req.params.id;
+  const updatedNewsletter = req.body;
+
+  try {
+    const foundNewsletter = await Newsletter.findByPk(NewsletterId);
+
+    if (!foundNewsletter) {
+      return res.status(404).json({ msg: "Newsletter not found" });
+    }
+
+    await foundNewsletter.update(updatedNewsletter);
+
+    res.status(200).json({
+      msg: "Newsletter has been updated successfully",
+      updatedNewsletter: foundNewsletter,
+    });
+  } catch (error) {
+    console.error("Error updating newsletter:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+};
+
+const deleteNewsletter = async (req, res) => {
+  const NewsletterId = req.params.id;
+  try {
+    const foundNewsletter = await Newsletter.findByPk(NewsletterId);
+    if (!foundNewsletter) {
+      res.status(404).json({ msg: "Newsletter not found" });
+    }
+    await foundNewsletter.destroy();
+    res.status(200).json({ msg: "Newsletter deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ msg: "internal server error" });
+  }
+};
+
+const countNews= async (req, res) => {
+  try {
+  const sql = 'SELECT COUNT(*) AS count FROM newsletters'; 
+    db.query(sql, (err, result) => {
+    if (err) return res.status(500).send(err);
+    res.json({ count: result[0].count });
+  });
+    res.status(200).json({ count });
+  } catch (error) {
+    console.error("Error counting newsletters:", error);
+    res.status(500).json({ msg: "Internal server error" });
+  }
+}
+
+// app.get('/news/count', (req, res) => {
+//   const sql = 'SELECT COUNT(*) AS count FROM newsletters'; 
+//   db.query(sql, (err, result) => {
+//     if (err) return res.status(500).send(err);
+//     res.json({ count: result[0].count });
+//   });
+// });
+
+
+module.exports = {
+  getNewsletter,
+  postNewsletter,
+  putNewsletter,
+  deleteNewsletter,
+  getOneNewsletter,
+  countNews,
+};
